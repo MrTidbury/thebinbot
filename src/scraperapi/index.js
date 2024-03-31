@@ -2,18 +2,44 @@
 
 // [START functions_http_method]
 const functions = require('@google-cloud/functions-framework');
+const { BracknellScraper } = require("./scrapers/bracknell");
+const API_KEY = process.env.API_KEY;
 
-functions.http('mainHttp', (req, res) => {
-    console.log(req)
-    switch (req.method) {
-    case 'GET':
-        res.status(200).send('Hello World!');
-        break;
-    case 'PUT':
-        res.status(403).send('Forbidden!');
-        break;
-    default:
-        res.status(405).send({error: 'Something blew up!'});
-        break;
+functions.http('mainHttp', async (req, res) => {
+    // Check if the request method is GET
+    if (req.method !== 'GET') {
+        return res.status(403).send('Forbidden: Only GET requests are allowed.');
+    }
+
+    // Check if x-api-key header is present and matches the API key
+    const apiKey = req.headers['x-api-key'];
+    if (!apiKey || apiKey !== API_KEY) {
+        return res.status(403).send('Forbidden: API key is missing or invalid.');
+    }
+
+    // Extract the last part of the path
+    const path = req.path.split('/').pop();
+
+    // Parse URL parameters to extract streetAddress and postCode
+    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+    const streetAddress = urlParams.get('streetAddress');
+    const postCode = urlParams.get('postCode');
+
+
+    if (!streetAddress || !postCode) {
+        return res.status(400).send('Bad Request: streetAddress and postCode are required.');
+    }
+
+    // Execute switch statement based on the last part of the path
+    switch (path) {
+        case 'bracknell':
+            let resp = await BracknellScraper(postCode, streetAddress)
+            if (resp.success) {
+                return res.status(200).send(resp);
+            } else {
+                return res.status(400).send(resp);
+            }
+        default:
+            return res.status(404).send('Not Found');
     }
 });

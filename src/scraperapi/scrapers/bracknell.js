@@ -7,8 +7,6 @@ function PromiseTimeout(delayms) {
   });
 }
 
-
-
 var AsyncBracknellScraper = async (postcode, streetAddress) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -92,7 +90,7 @@ var AsyncBracknellScraper = async (postcode, streetAddress) => {
     })
     const bin_values = [recylingCollection, refuseCollection, foodCollection, gardenCollection]
     if (bin_values.some(variable => variable !== null && variable !== undefined)){
-        return {success: true, errors: null, result: {recyling: recylingCollection, refuse: refuseCollection, food: foodCollection, garden: gardenCollection}}
+        return {success: true, errors: null, result: {"Recylcing": recylingCollection, "General Waste": refuseCollection, "Food Waste": foodCollection, "Garden Waste": gardenCollection}}
     }
     else {
         return {success: false, errors: "No bin collection dates found", result: null}

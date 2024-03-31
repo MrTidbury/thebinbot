@@ -1,0 +1,15 @@
+{
+  "name": "binbotscraper-local",
+  "version": "1.0.0",
+  "description": "Local way of running and testing scaper node functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "node -e \"require('./index').test()\"",
+    "test-bracknell": "node -e \"require('./index').testJagLane()\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
+  }
+}

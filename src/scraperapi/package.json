@@ -1,0 +1,14 @@
+{
+  "name": "binbot-scraper",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Google Inc.",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.1.2",
+    "puppeteer": "^18.2.1"
+  }
+}

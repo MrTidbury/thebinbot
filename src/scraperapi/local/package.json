@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node -e \"require('./index').test()\"",
-    "test-bracknell": "node -e \"require('./index').testJagLane()\""
+    "test-bracknell": "node -e \"require('./index').testJagLane()\"",
+    "test-westberks": "node -e \"require('./index').testMumDad()\""
   },
   "author": "",
   "license": "ISC",

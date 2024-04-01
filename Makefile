@@ -12,6 +12,9 @@ test-scraper:
 test-bracknell-scraper:
 	@echo "Running Bracknell Scraper Tests"
 	@cd src/scraperapi/local && npm run test-bracknell
+test-westberks-scraper:
+	@echo "Running WestBerks Scraper Tests"
+	@cd src/scraperapi/local && npm run test-westberks
 test-main:
 	@echo "Running BinBot Main Locally"
 	@echo "+---------------------------------+"

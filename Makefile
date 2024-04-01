@@ -22,3 +22,6 @@ test-main:
 	@echo "Running BinBot Main Locally"
 	@echo "+---------------------------------+"
 	@cd src/binbotmain/ && python3 main.py
+onboard-user:
+	@echo "Onboarding User"
+	@cd src/binbotmain/ && python3 onboard_user.py

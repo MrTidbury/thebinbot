@@ -245,19 +245,20 @@ class BinBot:
             # Data returned, send the user the data...
             message = f"Hot off the press, here are your next collections:\n\n"
             # Loop through the data and build the message...
+            print(bin_data)
             for bin_type, bin_date in bin_data:
                 if bin_date is not None:
                     message += f"- {bin_type}: {bin_date.strftime('%A %d %B')}\n"
                 else:
                     message += f"- {bin_type} - No data available\n"
-                message += f"\n\n- {self.robot_unicode} TheBinBot"
-                # Send the message...
-                self.twilio_client.messages.create(
-                    to=from_number,
-                    from_=self.twilio_sender,
-                    body=message
-                )
-                return
+            message += f"\n\n- {self.robot_unicode} TheBinBot"
+            # Send the message...
+            self.twilio_client.messages.create(
+                to=from_number,
+                from_=self.twilio_sender,
+                body=message
+            )
+            return
         else:
             # Not a recongised command, send the user a help message...
             message = f"Sorry, I didn't understand that. Im still learning but currently you can ask me the following \n \n - WHEN: gets the latest bin collection dates for you \n\n - {self.robot_unicode} TheBinBot"

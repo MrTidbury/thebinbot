@@ -14,4 +14,4 @@ TheBinBot is a system designed to send automated reminders to users via text mes
 
 ## Functionality
 - Sends automated reminders to users via text messages
-- Allows users to respond to the bot and interact with it
+- Allows users to respond to the bot and interact with it such as for asking for updated readme

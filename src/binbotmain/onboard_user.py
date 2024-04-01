@@ -142,7 +142,7 @@ def main():
 
     message = "🤖 Hello there I'm BinBot! 🎉\n\nWelcome aboard! You've been successfully set up to receive reminders about when to put the bins out. 🗑️✨\n\nFrom now on, you'll receive an automatic text the night before the bins will be collected. 📱🌙 Additionally, you can always text 'WHEN' at any time to get the latest collection information. 📆💬\n\nAnd hey, it might be a good idea to save this number in your contacts, so you never miss out on any important reminders!\n\nIf you ever have any questions or need assistance, feel free to reach out. Happy binning! 🚮🌟"
     resp = twilio_client.messages.create(
-        to="+447788591799",
+        to=phone_number,
         from_="+447488892773",
         body=message
     )

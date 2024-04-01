@@ -53,7 +53,7 @@ class BinBot:
     and respond to them with the relevant information.
     """
     def __init__(self, safe_run=False):
-        self.FORCE_SEND = True
+        self.FORCE_SEND = False
         self.config_path = "./config/config.yaml"
         self.api_key = os.environ.get("API_KEY")
         self.twilio_auth = os.environ.get("TWILIO_AUTH")

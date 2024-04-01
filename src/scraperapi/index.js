@@ -4,6 +4,7 @@
 const functions = require('@google-cloud/functions-framework');
 const { BracknellScraper } = require("./scrapers/bracknell");
 const { WestBerksScraper } = require("./scrapers/westberks");
+const { ReadingScraper } = require("./scrapers/reading");
 const API_KEY = process.env.API_KEY;
 
 functions.http('mainHttp', async (req, res) => {
@@ -47,6 +48,13 @@ functions.http('mainHttp', async (req, res) => {
             } else {
                 return res.status(400).send(bresp);
             }
+        case 'reading':
+                let rresp = await ReadingScraper(postCode, streetAddress)
+                if (rresp.success) {
+                    return res.status(200).send(rresp);
+                } else {
+                    return res.status(400).send(rresp);
+                }
         default:
             return res.status(404).send('Not Found');
     }

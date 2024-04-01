@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node -e \"require('./index').test()\"",
     "test-bracknell": "node -e \"require('./index').testJagLane()\"",
-    "test-westberks": "node -e \"require('./index').testMumDad()\""
+    "test-westberks": "node -e \"require('./index').testMumDad()\"",
+    "test-reading": "node -e \"require('./index').testHarry()\""
   },
   "author": "",
   "license": "ISC",

@@ -1,5 +1,6 @@
 const { BracknellScraper } = require("../scrapers/bracknell");
 const { WestBerksScraper } = require("../scrapers/westberks");
+const { ReadingScraper } = require("../scrapers/reading");
 const prompt = require('prompt-sync')();
 
 async function main(council, postcode, houseNumber) {
@@ -8,9 +9,15 @@ async function main(council, postcode, houseNumber) {
         case 'bracknell':
             console.log('Running the Bracknell Scraper')
             resp = await BracknellScraper(postcode, houseNumber)
+        case 'reading':
+            console.log('Running the Reading Scraper')
+            resp = await ReadingScraper(postcode, houseNumber)
+        case 'westberks':
+            console.log('Running the WestBerks Scraper')
+            resp = await WestBerksScraper(postcode, houseNumber)
     }
-        
     console.log(resp)
+    
 }
 
 async function testJagLane() {
@@ -29,6 +36,13 @@ async function testMumDad() {
     console.log(resp)
 }
 
+async function testHarry() {
+    const postcode = 'RG30 4LT'
+    const houseNumber = '20 poole close'
+    console.log('Running the Reading Scraper for 20 poole close, RG30 4LT')
+    const resp = await ReadingScraper(postcode, houseNumber)
+    console.log(resp)
+}
 
 async function test() {
     const council = prompt('What scraper to run?   > ');
@@ -37,4 +51,4 @@ async function test() {
     const resp = await main(council, poastCode, houseNumber)
 }
 
-module.exports = { main, testJagLane, test, testMumDad}
+module.exports = { main, testJagLane, test, testMumDad, testHarry}

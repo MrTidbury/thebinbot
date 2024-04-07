@@ -7,8 +7,14 @@ deploy-main:
 	@gcloud functions deploy binbot-main --gen2 --region=europe-west2 --runtime=python311 --source=src/binbotmain/ --entry-point=main --trigger-http
 
 deploy-spawner:
-	@echo "Deploying BinBot Main to GCP"
+	@echo "Deploying BinBot Spawner to GCP"
 	@gcloud functions deploy binbot-spawner --gen2 --region=europe-west2 --runtime=python311 --source=src/binbotspawner/ --entry-point=main --trigger-http
+
+deploy-all:
+	@echo "Deploying All BinBot Functions to GCP"
+	@make deploy-scraper
+	@make deploy-main
+	@make deploy-spawner
 
 test-scraper:
 	@echo "Running Scraper Tests"

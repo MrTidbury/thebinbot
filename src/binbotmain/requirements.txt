@@ -5,3 +5,4 @@ requests==2.31.0
 twilio==9.0.2
 urllib3==2.2.1
 google-cloud-logging==3.10.0
+google-cloud-firestore==2.16.0

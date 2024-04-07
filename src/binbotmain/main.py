@@ -3,6 +3,7 @@ import os
 import requests
 import yaml
 import logging
+import json
 from urllib.parse import urlencode
 from markupsafe import escape
 from dotenv import load_dotenv
@@ -17,13 +18,37 @@ class BBUser:
     """Class used for managing user data for the BinBot system. This was put in place 
     to make it easier to migrate to a DB in the future.
     """
-    def __init__(self, alias, phone, council, streetAddress, postCode, base_url):
+    def __init__(self, alias, phone, council, streetAddress, postCode, bin_data, cache_updated_on, base_url):
         self.alias = alias
         self.phone = phone
         self.council = council
         self.streetAddress = streetAddress
         self.postCode = postCode
+        self.bin_data = self.parse_bin_data(bin_data)
+        self.cache_updated_on = cache_updated_on
         self.url = self.get_url(base_url)
+
+    def parse_bin_data(self, bin_data):
+        """Used to parse the bin data from the json string we store
+        in the firestore database.
+
+        Args:
+            bin_data (str): String of json data to parse.
+
+        Returns:
+            dict: Parsed and sorted bin data.
+        """
+        parsed_bin_data = {}
+        bin_data = json.loads(bin_data)
+        for key, value in bin_data.items():
+            if value:
+                parsed_bin_data[key] = datetime.fromisoformat(value[:-1])
+            else:
+                parsed_bin_data[key] = None
+        # Sort the data by date...
+        sorted_dates = sorted(parsed_bin_data.items(), key=lambda x: x[1])
+        # Return the sorted data...
+        return sorted_dates
 
     def get_url(self, base_url):
         """Helper function to generate the URL for the user to get their bin data.
@@ -60,14 +85,11 @@ class BBUser:
         users = []
         for doc in docs:
             data = doc.to_dict()
-            user = cls(data["first_name"], data["phone"], data["council"], data["street_address"], data["post_code"], base_url)
+            user = cls(data["first_name"], data["phone"], data["council"], data["street_address"], data["post_code"], data['bin_data'], data['cache_updated_on'], base_url)
             users.append(user)
         
         print(f"\t Loaded {len(users)} users")
         return users
-
-
-
 
     def __str__(self):
         """Custom to string func for the BBUser class. Used for debugging / logging.
@@ -82,9 +104,10 @@ class BinBot:
     the first is to send daily reminders to users about their upcoming bin collections. The second is to process incoming messages from users
     and respond to them with the relevant information.
     """
-    def __init__(self, safe_run=False):
-        self.FORCE_SEND = False
-        self.ONLY_RUN_FOR_JACK = False
+    def __init__(self, safe_run=False, local=False):
+        self.FORCE_SEND = True
+        self.local = local
+        self.ONLY_RUN_FOR_JACK = True
         self.api_key = os.environ.get("API_KEY")
         self.twilio_auth = os.environ.get("TWILIO_AUTH")
         self.twilio_sid = os.environ.get("TWILIO_SID")
@@ -101,48 +124,36 @@ class BinBot:
         print("BinBot initialised")
         pass
     
-    def get_bin_data(self, user):
-        """This function is used to get the bin data for a user from the scraper function. It will call out to the scraper function and return the data. This will
-        also check for and handle any errors that occur.
+
+    def sms_me_error(self, message):
+        """Function used to send me an SMS when an error occurs. This is used for debugging and monitoring the system."""
+        if self.local:
+            print(f"SMS ME ERROR: {message}")
+        else:
+            return self.twilio_client.messages.create(to="+447788591799",from_=self.twilio_sender,body=f"BinBotError: {message}")
+
+    def check_cache_age(self, user):
+        """Function to check the age on a cache. If the cache is older than 5 days we will skip this user and not send them a reminder.
 
         Args:
-            user (BBUser): BinBotUser object to get the bin data for.
+            user (BBuser): User to check the cache on
 
         Returns:
-            tuple(bin_data(dict), error(str)): Returns a tuple with the bin data as a dictionary and any error as a string. If there is no error the error will be None. If there is an error the data will be None.
+            bool: True if the cache is up to date, False if the cache is out of date.
         """
-        # init the data and error variables...
-        data = None
-        error = None
-        # Call out to the scraper function...
-        try:
-            resp = requests.get(user.url, headers={"x-api-key": self.api_key})
-        # Catch any errors and log them...
-        except Exception as e:
-            logging.error(f"Error for user: {user.alias}")
-            logging.error(e)
-            # Return the error...
-            return None, str(e)
-        # Check the response code...
-        if resp.status_code == 200:
-            # Response was good...
-            bin_data = resp.json()['result']
-            # Parse the data...
-            parsed_bin_data = {}
-            for key, value in bin_data.items():
-                if value:
-                    parsed_bin_data[key] = datetime.fromisoformat(value[:-1])
-                else:
-                    parsed_bin_data[key] = None
-            # Sort the data by date...
-            sorted_dates = sorted(parsed_bin_data.items(), key=lambda x: x[1])
-            # Return the sorted data...
-            return sorted_dates, None
-        else:
-            # Handle any errors from the API.
-            logging.error(f"Error from api for user: {user.alias}")
-            logging.error(resp.text)
-            return None, str(resp.text)
+        cache_last_updated = user.cache_updated_on
+        # If the cache was updated today, skip this user...
+        current_time = datetime.now()
+        # Convert Firestore timestamp to epoch time (milliseconds)
+        firestore_epoch_time = cache_last_updated.timestamp() * 1000
+        # Convert current time to epoch time (milliseconds)
+        current_epoch_time = current_time.timestamp() * 1000
+        # Calculate the difference
+        difference = current_epoch_time - firestore_epoch_time
+        if difference > 5 * 24 * 60 * 60 * 1000:
+            self.sms_me_error(f"Cache is out of date for user: {user.alias}")
+            return False
+        return True
 
     def daily_triger(self):
         """This is the function that is called when this script is run by the daily trigger. This function will loop through the users
@@ -151,20 +162,24 @@ class BinBot:
         logging.info("Running Daily trigger...")
         # Loop through the users...
         for user in self.users:
-            if self.ONLY_RUN_FOR_JACK:
-                if user.alias != "Jack":
+            try:
+                if self.ONLY_RUN_FOR_JACK:
+                    if user.alias != "Jack":
+                        continue
+                # Add this to the log to help with debugging...
+                print(f"\t Running for user: {user.alias}")
+                # Get the bin data for the user...
+
+                bin_data = user.bin_data
+                cache_ok = self.check_cache_age(user)
+                if not cache_ok:
                     continue
-            # Add this to the log to help with debugging...
-            print(f"\t Running for user: {user.alias}")
-            # Get the bin data for the user...
-            bin_data, error = self.get_bin_data(user)
-            # If this fails, log and continue to the next user...
-            if not bin_data:
-                logging.error(f"Error getting bin data for user: {user.alias}")
-                logging.error(error)
-                continue
-            # Continue to process the data...
-            self.process_bin_data_for_reminders(user, bin_data)          
+
+                # Process the bin data for the user...
+                self.process_bin_data_for_reminders(user, bin_data) 
+            except Exception as e:
+                self.sms_me_error(f"Error processing user: {user.alias} - {e}")
+         
         return
 
     def process_bin_data_for_reminders(self, user, bin_data):
@@ -206,6 +221,7 @@ class BinBot:
         return
 
     def process_incomeing_message(self, from_number, body):
+    def process_incomeing_message(self, from_number, body):
         """THis function is triggered when an incoming message is recieved by the Twilio webhook. This function will process the message and send a response to the user.
 
         Args:
@@ -234,24 +250,18 @@ class BinBot:
             return
         # Senfing WHEN will trigger us to send them the next collections...
         if body.lower() == "when":
-            # Send the user a holding message while we fetch the data...
-            message = f"Hi {user.alias}! \n\n Im just fetching the latest collection dates for you:"
-            self.twilio_client.messages.create(
-                to=from_number,
-                from_=self.twilio_sender,
-                body=message
-            )
             # Get the bin data for the user...
-            bin_data, error = self.get_bin_data(user)
-            # No data returned send generic error message...
-            if not bin_data:
-                message = f"Sorry, I couldn't get the data for you. Please try again later. If the problem persists please contact Jack."
+            bin_data = user.bin_data
+            cache_ok = self.check_cache_age(user)
+            # Cache is out of date, send the user a message to let them know...
+            if not cache_ok:
                 self.twilio_client.messages.create(
                     to=from_number,
                     from_=self.twilio_sender,
-                    body=message
+                    body="Sorry, I couldn't get the data for you. Please try again later. If the problem persists please contact Jack."
                 )
                 return
+
             # Data returned, send the user the data...
             message = f"Hot off the press, here are your next collections:\n\n"
             # Loop through the data and build the message...
@@ -326,7 +336,7 @@ if __name__ == "__main__":
     # Load the .env file...
     load_dotenv()
     # Create a new class and trigger the daily reminders...
-    bb = BinBot(safe_run=True)
+    bb = BinBot(safe_run=True, local=True)
     bb.daily_triger()
 
 

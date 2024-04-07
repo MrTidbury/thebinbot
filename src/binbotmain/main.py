@@ -105,9 +105,9 @@ class BinBot:
     and respond to them with the relevant information.
     """
     def __init__(self, safe_run=False, local=False):
-        self.FORCE_SEND = True
+        self.FORCE_SEND = False
         self.local = local
-        self.ONLY_RUN_FOR_JACK = True
+        self.ONLY_RUN_FOR_JACK = False
         self.api_key = os.environ.get("API_KEY")
         self.twilio_auth = os.environ.get("TWILIO_AUTH")
         self.twilio_sid = os.environ.get("TWILIO_SID")

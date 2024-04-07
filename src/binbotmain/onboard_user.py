@@ -9,6 +9,44 @@ import requests
 import yaml
 import phonenumbers
 import subprocess
+from google.cloud import firestore
+from google.protobuf import timestamp_pb2
+import datetime
+
+def new():
+    # Create a client object
+
+    config = load_config()
+
+    db = firestore.Client()
+
+    # Reference to the collection
+    collection_ref = db.collection('bbusers')
+
+    for user in config["users"]:
+        user = {
+            "bin_data": {},
+            "post_code": user["postCode"],
+            "street_address": user["streetAddress"],
+            "phone": user["phone"],
+            "council": user["council"],
+            "first_name": user['alias'],
+            "username": user['alias'].lower(),
+            "remind_on": 18,
+            "cached_on": firestore.SERVER_TIMESTAMP
+        }
+        time_stamp, doc_ref = collection_ref.add(user)
+        print(doc_ref)
+        print(f'Added document with ID: {doc_ref.id}')
+
+
+
+    # Retrieve all documents in the collection
+    docs = collection_ref.stream()
+
+    # Iterate over the documents and print them
+    for doc in docs:
+        print(f'{doc.id} => {doc.to_dict()}')
 
 
 def load_config():
@@ -151,7 +189,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    new()
+    # main()
 
 
     

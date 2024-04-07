@@ -9,6 +9,9 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+from google.cloud import firestore
+from google.protobuf import timestamp_pb2
+
 
 class BBUser:
     """Class used for managing user data for the BinBot system. This was put in place 
@@ -38,6 +41,33 @@ class BBUser:
         }
         url_with_params = url + "?" + urlencode(params)
         return url_with_params
+    
+    @classmethod
+    def load_users(cls, base_url):
+        """Load the users from firestore, and return them as a list of BBUser objects.
+
+        Returns:
+            list[BBUser]: A list of BBUsers loaded from firestore.
+        """
+
+        print("Loading users from firestore...")
+        db = firestore.Client()
+        collection_ref = db.collection('bbusers')
+
+        # Retrieve all documents in the collection
+        docs = collection_ref.stream()
+
+        users = []
+        for doc in docs:
+            data = doc.to_dict()
+            user = cls(data["first_name"], data["phone"], data["council"], data["street_address"], data["post_code"], base_url)
+            users.append(user)
+        
+        print(f"\t Loaded {len(users)} users")
+        return users
+
+
+
 
     def __str__(self):
         """Custom to string func for the BBUser class. Used for debugging / logging.
@@ -54,15 +84,14 @@ class BinBot:
     """
     def __init__(self, safe_run=False):
         self.FORCE_SEND = False
-        self.config_path = "./config/config.yaml"
+        self.ONLY_RUN_FOR_JACK = False
         self.api_key = os.environ.get("API_KEY")
         self.twilio_auth = os.environ.get("TWILIO_AUTH")
         self.twilio_sid = os.environ.get("TWILIO_SID")
         self.twilio_sender = os.environ.get("TWILIO_SENDER")
         self.safe_run = safe_run
-        self.config = self.load_config()
         self.scraper_url = "https://europe-west2-bin-bot-364810.cloudfunctions.net/binbot-scraper"
-        self.users = self.load_users()
+        self.users = BBUser.load_users(self.scraper_url)
         self.twilio_client = Client(self.twilio_sid, self.twilio_auth)
         self.siren_unicode = "\U0001F6A8"
         self.robot_unicode = "\U0001F916"
@@ -71,29 +100,7 @@ class BinBot:
         print(f"Loaded {len(self.users)} users")
         print("BinBot initialised")
         pass
-
-    def load_config(self):
-        """Load the config file for the BinBot system. This is used to store the user data and other system settings.
-
-        Returns:
-            dict: The loaded yaml congif file as a dictionary.
-        """
-        with open(self.config_path, "r") as f:
-            config = yaml.safe_load(f)
-        return config
     
-    def load_users(self):
-        """Load the users from the config, and return them as a list of BBUser objects.
-
-        Returns:
-            list[BBUser]: A list of BBUsers loaded from the config file.
-        """
-        # TODO: Replace with a DB call...
-        users = []
-        for user in self.config['users']:
-            users.append(BBUser(user['alias'], user['phone'], user['council'], user['streetAddress'], user['postCode'], self.scraper_url))
-        return users
-
     def get_bin_data(self, user):
         """This function is used to get the bin data for a user from the scraper function. It will call out to the scraper function and return the data. This will
         also check for and handle any errors that occur.
@@ -144,6 +151,9 @@ class BinBot:
         logging.info("Running Daily trigger...")
         # Loop through the users...
         for user in self.users:
+            if self.ONLY_RUN_FOR_JACK:
+                if user.alias != "Jack":
+                    continue
             # Add this to the log to help with debugging...
             print(f"\t Running for user: {user.alias}")
             # Get the bin data for the user...

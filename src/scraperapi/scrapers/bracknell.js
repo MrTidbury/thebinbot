@@ -16,7 +16,6 @@ var AsyncBracknellScraper = async (postcode, streetAddress) => {
     await page.keyboard.press('Enter');
     await PromiseTimeout(1500);
     await page.type('input[placeholder="Postcode or street name"]', postcode, {delay: 20})
-    await PromiseTimeout(3000);
     try {
         // Wait for the dropdown to appear for a maximum of 5 seconds
         await page.waitForSelector('.input_dropdown', { timeout: 5000 });        

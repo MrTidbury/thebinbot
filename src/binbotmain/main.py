@@ -221,7 +221,6 @@ class BinBot:
         return
 
     def process_incomeing_message(self, from_number, body):
-    def process_incomeing_message(self, from_number, body):
         """THis function is triggered when an incoming message is recieved by the Twilio webhook. This function will process the message and send a response to the user.
 
         Args:

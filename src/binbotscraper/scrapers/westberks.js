@@ -126,7 +126,13 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
             }, value.selector);
 
             binSelectors[key].text = divTexts[1];
-            binSelectors[key].date = parseDateString(divTexts[1]);
+            if (divTexts[1] === "Today") {
+                var today = new Date();
+                binSelectors[key].date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+            } else {
+                binSelectors[key].date = parseDateString(divTexts[1]);
+            }
+            
           }
         }
         binsToReturn = {

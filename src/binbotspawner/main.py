@@ -101,9 +101,9 @@ class BBSpawner():
                 try:
                     js = await response.json()
                     error = js.get("errors")
-                    raise Exception(f"Failed to fetch URL for {user.alias}: {error}")
+                    return user, {'errors': error}
                 except Exception as e:
-                    raise Exception(f"Failed to fetch URL: {user.url}. Error: {e}")
+                    return user, {'errors': e}
             else:
                 return user, await response.json()
 
@@ -129,8 +129,11 @@ class BBSpawner():
             # Do something with user_responses
             for user, response in user_responses.items():
                 try:
-                    doc_ref = collection_ref.document(user.doc_id)
-                    doc_ref.update({'bin_data': json.dumps(response['result']), 'cache_updated_on': firestore.SERVER_TIMESTAMP})
+                    if response.get('errors', None):
+                        raise Exception(response['errors'])
+                    else:
+                        doc_ref = collection_ref.document(user.doc_id)
+                        doc_ref.update({'bin_data': json.dumps(response['result']), 'cache_updated_on': firestore.SERVER_TIMESTAMP})
                 except Exception as e:
                     errors.append(e)
 

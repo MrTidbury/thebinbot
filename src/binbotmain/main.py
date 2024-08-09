@@ -40,6 +40,7 @@ class BBUser:
         """
         parsed_bin_data = {}
         bin_data = json.loads(bin_data)
+        bin_data = bin_data['next']
         for key, value in bin_data.items():
             if value:
                 parsed_bin_data[key] = datetime.fromisoformat(value[:-1])

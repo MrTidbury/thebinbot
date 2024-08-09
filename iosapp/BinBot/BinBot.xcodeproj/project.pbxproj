@@ -50,6 +50,7 @@
 		E87A40D42C5D36E600B93EEA /* BinBotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinBotUITests.swift; sourceTree = "<group>"; };
 		E87A40D62C5D36E600B93EEA /* BinBotUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BinBotUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		E88C0FC12C5FA980005182D0 /* NextCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextCollectionView.swift; sourceTree = "<group>"; };
+		E8DA1F6D2C62AAF70026549C /* BinBot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BinBot.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +101,7 @@
 		E87A40B82C5D36E400B93EEA /* BinBot */ = {
 			isa = PBXGroup;
 			children = (
+				E8DA1F6D2C62AAF70026549C /* BinBot.entitlements */,
 				E87A40B92C5D36E400B93EEA /* BinBotApp.swift */,
 				E87A40BB2C5D36E400B93EEA /* BaseView.swift */,
 				E837F28D2C5D403F0024C150 /* LogInView.swift */,
@@ -431,6 +433,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BinBot/BinBot.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BinBot/Preview Content\"";
@@ -449,6 +453,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jacktidbury.BinBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -460,6 +465,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BinBot/BinBot.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BinBot/Preview Content\"";
@@ -478,6 +485,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jacktidbury.BinBot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

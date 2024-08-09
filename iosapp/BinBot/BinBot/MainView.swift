@@ -149,12 +149,15 @@ struct UpcomingCollectionView: View {
 
 struct SettingsView: View {
     @Binding var UserId: String
+    @AppStorage("email") var email: String = ""
+    @AppStorage("firstName") var firstName: String = ""
+    @AppStorage("lastName") var lastName: String = ""
     var body: some View {
         VStack {
             Image(systemName: "gear")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Settings View!")
+            Text("Hi \(firstName) \(lastName) 👋!")
             Button("LogOut") {
                 withAnimation {
                     UserId = ""

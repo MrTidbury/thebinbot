@@ -9,15 +9,16 @@ import SwiftUI
 
 struct BaseView: View {
     
-    @State private var LoggedInUser = ""
+    // Pull the UserId from Cache...
+    @AppStorage("userIdCache") var cachedUserID: String = ""
     
     var body: some View {
-        if (LoggedInUser.isEmpty) {
+        if (cachedUserID.isEmpty) {
             // User not logged in, render the login page...
-            LogInView(UserId: $LoggedInUser)
+            LogInView(UserId: $cachedUserID)
         } else {
             // User is logged in, render the login page...
-            MainView(UserId: $LoggedInUser)
+            MainView(UserId: $cachedUserID)
         }
     }
 }

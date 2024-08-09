@@ -10,6 +10,7 @@ function PromiseTimeout(delayms) {
 var AsyncBracknellScraper = async (postcode, streetAddress) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+    const datePattern = /\b\d{1,2} \w+ \d{4}\b/;
     await page.goto('https://selfservice.mybfc.bracknell-forest.gov.uk/w/webpage/waste-collection-days')
     await PromiseTimeout(1500)
     // Press enter to accept cookies ...
@@ -48,48 +49,85 @@ var AsyncBracknellScraper = async (postcode, streetAddress) => {
       const tableBody = document.querySelectorAll('td');
       return Array.from(tableBody).map(element => element.innerText);
     });
-    var refuseCollection = null
-    var recylingCollection = null
-    var gardenCollection = null
-    var foodCollection = null
+
+    function parseDate(str){
+      let match = str.match(datePattern);
+      let datestr = match ? match[0] : null;
+      let collectionDate = new Date(Date.parse(datestr))
+      return collectionDate
+    }
+
+    var nextrefuseCollection = null
+    var nextrecylingCollection = null
+    var nextgardenCollection = null
+    var nextfoodCollection = null
+    let gardenCollections = []
+    let foodCollections = []
+    let recylingCollections = []
+    let refugeCollections = []
     data.forEach((foundString, index) => {
       if (foundString.includes('refuse')){
         let array = foundString.split('Your')
         array.forEach((pickup) => {
-          if (pickup.startsWith(' next')){
-            refuseCollection = pickup.substring(26)
-            refuseCollection = new Date(Date.parse(refuseCollection.slice(1, -1)))
+          if (pickup !== ''){
+            let collectionDate = parseDate(pickup)
+            refugeCollections.push(collectionDate)
+            if (pickup.startsWith(' next')){
+              nextrefuseCollection = collectionDate
+            }
           }
         })
       } else if (foundString.includes('recycling')){
         let array = foundString.split('Your')
         array.forEach((pickup) => {
-          if (pickup.startsWith(' next')){
-            recylingCollection = pickup.substring(29)
-            recylingCollection = new Date(Date.parse(recylingCollection.slice(1, -1)))
+          if (pickup !== ''){
+            let collectionDate = parseDate(pickup)
+            if (pickup.startsWith(' next')){
+              nextrecylingCollection = collectionDate
+            }
+            recylingCollections.push(collectionDate)
           }
         })
       } else if (foundString.includes('food')){
         let array = foundString.split('Your')
         array.forEach((pickup) => {
-          if (pickup.startsWith(' next')){
-            foodCollection = pickup.substring(24)
-            foodCollection = new Date(Date.parse(foodCollection.slice(1, -1)))
+          if (pickup !== ''){
+            let collectionDate = parseDate(pickup)
+            if (pickup.startsWith(' next')){
+              nextfoodCollection = collectionDate
+            }
+            foodCollections.push(collectionDate)
           }
         })
       } else if (foundString.includes('garden')){
         let array = foundString.split('Your')
         array.forEach((pickup) => {
-          if (pickup.startsWith(' next')){
-            gardenCollection = pickup.substring(26)
-            gardenCollection = new Date(Date.parse(gardenCollection.slice(1, -1)))
+          if (pickup !== ''){
+            let collectionDate = parseDate(pickup)
+            if (pickup.startsWith(' next')){
+              nextgardenCollection = collectionDate
+            }
+            gardenCollections.push(collectionDate)
           }
         })
       }
     })
-    const bin_values = [recylingCollection, refuseCollection, foodCollection, gardenCollection]
-    if (bin_values.some(variable => variable !== null && variable !== undefined)){
-        return {success: true, errors: null, result: {"Recylcing": recylingCollection, "General Waste": refuseCollection, "Food Waste": foodCollection, "Garden Waste": gardenCollection}}
+
+    const nextCollection = [nextrecylingCollection, nextrefuseCollection, nextfoodCollection, nextgardenCollection]
+    if (nextCollection.some(variable => variable !== null && variable !== undefined)){
+        let returnData = {
+          next: {
+            "Recylcing": nextrecylingCollection,
+            "General Waste": nextrefuseCollection,
+            "Food Waste": nextfoodCollection,
+            "Garden Waste": nextgardenCollection
+          },
+          recyling: recylingCollections,
+          refuse: refugeCollections,
+          food: foodCollections,
+          garden: gardenCollections
+        }
+        return {success: true, errors: null, result: returnData}
     }
     else {
         return {success: false, errors: "No bin collection dates found", result: null}

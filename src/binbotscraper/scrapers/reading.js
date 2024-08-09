@@ -61,7 +61,20 @@ var AsyncReadingScraper = async (postcode, streetAddress) => {
 
       // console.log(bins);
 
-      let finalData = {}
+      let finalData = { 
+        next: {},
+        food: [],
+        recyling: [],
+        garden: [],
+        refuse: []
+      }
+
+      let binNameMap = {
+        Food: "food",
+        'Recycling (red bin)': "recyling",
+        'Garden (green bin)': "garden",
+        'Rubbish (grey bin)': "refuse"
+      }
 
       Object.entries(bins).forEach(([binName, dates]) => {
         let parsedDates = []
@@ -71,11 +84,12 @@ var AsyncReadingScraper = async (postcode, streetAddress) => {
           const [day, month, year] = dateString.split('/');
           dateString = `${year}-${month}-${day}`;
           parsedDates.push(new Date(Date.parse(dateString)))
+          finalData[binNameMap[binName]].push(new Date(Date.parse(dateString)))
         })
         const soonestDate = parsedDates.reduce((minDate, currentDate) => {
           return currentDate < minDate ? currentDate : minDate;
         }, parsedDates[0]);
-        finalData[binName] = soonestDate
+        finalData.next[binName] = soonestDate
       });
 
       await browser.close();

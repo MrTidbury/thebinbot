@@ -124,26 +124,46 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
                 const div = document.querySelector(selector);
                 return getAllTextFromDiv(div);
             }, value.selector);
-
+            
+            console.log(divTexts)
             binSelectors[key].text = divTexts[1];
             if (divTexts[1] === "Today") {
                 var today = new Date();
                 binSelectors[key].date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
             } else {
-                binSelectors[key].date = parseDateString(divTexts[1]);
+                try {
+                    binSelectors[key].date = parseDateString(divTexts[1]);
+                }
+                catch (error) {
+                    binSelectors[key].date = null;
+                }                
             }
             
           }
         }
+
+        if (binSelectors["General Waste"].date === null && streetAddress == 'old windmill cottage') {
+            binSelectors["General Waste"].date = binSelectors["Food Waste"].date
+        }
+
         binsToReturn = {
-            "Food Waste": binSelectors["Food Waste"].date,
-            "Recyling": binSelectors["Recyling"].date,
-            "General Waste": binSelectors["General Waste"].date,
+            next: {
+                "Food Waste": binSelectors["Food Waste"].date,
+                "Recyling": binSelectors["Recyling"].date,
+                "General Waste": binSelectors["General Waste"].date,
+                "Garden Waste": binSelectors["Recyling"].date,
+            },
+            food: [binSelectors["Food Waste"].date],
+            recyling: [binSelectors["Recyling"].date],
+            garden: [binSelectors["Recyling"].date],
+            refuse: [binSelectors["General Waste"].date]
+            
         }
         await browser.close();
         return {success: true, errors: null, result: binsToReturn}
 
     } catch (error) {
+        throw error
         console.error(error.message);
         await browser.close();
         return {success: false, errors: error.message, result: null}

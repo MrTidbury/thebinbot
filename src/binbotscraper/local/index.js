@@ -31,14 +31,22 @@ async function testJagLane() {
 async function testMumDad() {
     const postcode = 'rg31 7zn'
     const houseNumber = '20 Carston Grove'
-    console.log('Running the Bracknell Scraper for 20 carston grove, rg31 7zn')
+    console.log('Running the West Berks Scraper for 20 carston grove, rg31 7zn')
+    const resp = await WestBerksScraper(postcode, houseNumber)
+    console.log(resp)
+}
+
+async function testJo() {
+    const postcode = 'RG18 9XP'
+    const houseNumber = 'old windmill cottage'
+    console.log('Running the West Berks Scraper for 20 carston grove, rg31 7zn')
     const resp = await WestBerksScraper(postcode, houseNumber)
     console.log(resp)
 }
 
 async function testHarry() {
     const postcode = 'RG30 4LT'
-    const houseNumber = '20 poole close'
+    const houseNumber = '3 poole close'
     console.log('Running the Reading Scraper for 20 poole close, RG30 4LT')
     const resp = await ReadingScraper(postcode, houseNumber)
     console.log(resp)
@@ -51,4 +59,4 @@ async function test() {
     const resp = await main(council, poastCode, houseNumber)
 }
 
-module.exports = { main, testJagLane, test, testMumDad, testHarry}
+module.exports = { main, testJagLane, test, testMumDad, testHarry, testJo}

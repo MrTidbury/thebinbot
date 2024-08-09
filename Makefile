@@ -25,6 +25,9 @@ test-bracknell-scraper:
 test-westberks-scraper:
 	@echo "Running WestBerks Scraper Tests"
 	@cd src/binbotscraper/local && npm run test-westberks
+test-westberks-scraper-jo:
+	@echo "Running WestBerks Scraper Tests for Jo"
+	@cd src/binbotscraper/local && npm run test-westberks-jo
 test-reading-scraper:
 	@echo "Running Reading Scraper Tests"
 	@cd src/binbotscraper/local && npm run test-reading

@@ -66,7 +66,7 @@ var AsyncBracknellScraper = async (postcode, streetAddress) => {
     let recylingCollections = []
     let refugeCollections = []
     data.forEach((foundString, index) => {
-      if (foundString.includes('refuse')){
+      if (foundString.includes('general')){
         let array = foundString.split('Your')
         array.forEach((pickup) => {
           if (pickup !== ''){

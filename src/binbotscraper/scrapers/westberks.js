@@ -42,7 +42,7 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
     await page.goto('https://www.westberks.gov.uk/article/35776/Find-Your-Next-Collection-Day')
   
     // // Assuming the textbox has the name attribute "FINDYOURBINDAYS_ADDRESSLOOKUPPOSTCODE"
-    const postCodeInput = 'input[name="FINDYOURBINDAYS_ADDRESSLOOKUPPOSTCODE"]';
+    const postCodeInput = 'input[name="FINDYOURBINDAYS3WEEKLY_ADDRESSLOOKUPPOSTCODE"]';
 
     // // Type text into the textbox
     await page.type(postCodeInput, postcode, { delay: 20 });
@@ -50,7 +50,7 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
     // // Press Enter key
     await page.keyboard.press('Enter');
 
-    const dropdownSelector = '#FINDYOURBINDAYS_ADDRESSLOOKUPADDRESS';
+    const dropdownSelector = '#FINDYOURBINDAYS3WEEKLY_ADDRESSLOOKUPADDRESS';
     try {
         // Wait for the dropdown to populate with some options...
         await page.waitForFunction((selector) => {
@@ -90,62 +90,54 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
         // Select the street address from the dropdown..
         await page.select(dropdownSelector, selectedValue.value);
 
+        // Map bin names to their identifying CSS classes in the new HTML
         const binSelectors = {
-            "Food Waste": {selector: "#FINDYOURBINDAYS_FOODWASTEDATE", text: null, date: null},
-            "Recyling": {selector: "#FINDYOURBINDAYS_RECYCLINGDATE", text: null, date: null},
-            "General Waste": {selector: "#FINDYOURBINDAYS_RUBBISHDATE", text: null, date: null},
-        }
+            "General Waste": { class: ".rubbish_collection_difs_black", text: null, date: null },
+            "Recyling": { class: ".rubbish_collection_difs_green", text: null, date: null },
+            "Food Waste": { class: ".rubbish_collection_difs_purple", text: null, date: null }
+        };
 
-        await PromiseTimeout(1500);        
+        await PromiseTimeout(1500);
+
         for (const key in binSelectors) {
-          if (binSelectors.hasOwnProperty(key)) {
-            const value = binSelectors[key];
+            if (binSelectors.hasOwnProperty(key)) {
+                const value = binSelectors[key];
 
-            // console.log("Getting date for ", key)
+                // Wait for the relevant section to appear
+                await page.waitForSelector(value.class);
 
-            await page.waitForSelector(value.selector);
-            // Extract text content from the div
-            const divTexts = await page.evaluate((selector) => {
-                const getAllTextFromDiv = (element) => {
-                let texts = [];
-                const children = element.childNodes;
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i];
-                    if (child.nodeType === Node.TEXT_NODE) {
-                        if (child.textContent.trim() !== '') {
-                            texts.push(child.textContent.trim());
-                        }
-                    } else if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === 'div') {
-                    texts = texts.concat(getAllTextFromDiv(child));
+                // Extract the date text from inside the correct container
+                const divText = await page.evaluate((selector) => {
+                    const container = document.querySelector(selector);
+                    if (!container) return null;
+
+                    const dateDiv = container.querySelector(".rubbish_date_container_left_datetext");
+                    return dateDiv ? dateDiv.textContent.trim() : null;
+                }, value.class);
+
+                // Store text
+                binSelectors[key].text = divText;
+
+                // Convert to a Date
+                if (divText === "Today") {
+                    const today = new Date();
+                    binSelectors[key].date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
+                } else {
+                    try {
+                        binSelectors[key].date = parseDateString(divText);
+                    } catch (error) {
+                        binSelectors[key].date = null;
                     }
                 }
-                return texts;
-                };
-                const div = document.querySelector(selector);
-                return getAllTextFromDiv(div);
-            }, value.selector);
-            
-            console.log(divTexts)
-            binSelectors[key].text = divTexts[1];
-            if (divTexts[1] === "Today") {
-                var today = new Date();
-                binSelectors[key].date = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
-            } else {
-                try {
-                    binSelectors[key].date = parseDateString(divTexts[1]);
-                }
-                catch (error) {
-                    binSelectors[key].date = null;
-                }                
             }
-            
-          }
         }
 
-        if (binSelectors["General Waste"].date === null && streetAddress == 'old windmill cottage') {
-            binSelectors["General Waste"].date = binSelectors["Food Waste"].date
+        // Special case for "old windmill cottage"
+        if (binSelectors["General Waste"].date === null && streetAddress === 'old windmill cottage') {
+            binSelectors["General Waste"].date = binSelectors["Food Waste"].date;
         }
 
+        // Final return object
         binsToReturn = {
             next: {
                 "Food Waste": binSelectors["Food Waste"].date,
@@ -157,8 +149,9 @@ var AsyncWestBerksScraper = async (postcode, streetAddress) => {
             recyling: [binSelectors["Recyling"].date],
             garden: [binSelectors["Recyling"].date],
             refuse: [binSelectors["General Waste"].date]
-            
-        }
+        };
+
+
         await browser.close();
         return {success: true, errors: null, result: binsToReturn}
 

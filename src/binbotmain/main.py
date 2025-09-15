@@ -47,7 +47,11 @@ class BBUser:
             else:
                 parsed_bin_data[key] = None
         # Sort the data by date...
-        sorted_dates = sorted(parsed_bin_data.items(), key=lambda x: x[1])
+        try:
+            sorted_dates = sorted(parsed_bin_data.items(), key=lambda x: x[1])
+        except Exception as e:
+            print(f"Error sorting dates: {e}")
+            sorted_dates = parsed_bin_data.items()
         # Return the sorted data...
         return sorted_dates
 

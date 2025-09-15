@@ -39,7 +39,7 @@ async function testMumDad() {
 async function testJo() {
     const postcode = 'RG18 9XP'
     const houseNumber = 'old windmill cottage'
-    console.log('Running the West Berks Scraper for 20 carston grove, rg31 7zn')
+    console.log('Running the West Berks Scraper for Old Windmill Cottage, rg18 9xp')
     const resp = await WestBerksScraper(postcode, houseNumber)
     console.log(resp)
 }
